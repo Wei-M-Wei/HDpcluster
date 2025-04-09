@@ -1,4 +1,5 @@
 #' @import hdm
+#' @import plm
 #' @useDynLib HDpcluster
 #' @export
 hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans') {
