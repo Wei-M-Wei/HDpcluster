@@ -2,7 +2,7 @@
 #' @import plm
 #' @useDynLib HDpcluster
 #' @export
-hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = 'seperate') {
+hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = 'seperate', link = 'average') {
 
   if(type_cluster == 'one way kmeans'){
 
@@ -76,7 +76,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
       klong <- clusteri$res
 
 
-      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit')
+      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link)
       G <- cluster_hie$G
       klong$cluster <- cluster_hie$res
 
@@ -142,7 +142,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
           klong <- clusteri$res
 
 
-          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit')
+          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link)
           G <- cluster_hie$G
           klong$cluster <- cluster_hie$res
 
@@ -167,7 +167,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
         klong <- clusteri$res
 
 
-        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average')
+        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link)
         G <- cluster_hie$G
         klong$cluster <- cluster_hie$res
 
@@ -230,7 +230,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
 #' @import mlr3learners
 #' @import mlr3
 #' @export
-hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = "seperate") {
+hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = "seperate", link = 'average') {
 
   if(type_cluster == 'one way kmeans'){
 
@@ -321,7 +321,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
       klong <- clusteri$res
 
 
-      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit')
+      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link)
       G <- cluster_hie$G
       klong$cluster <- cluster_hie$res
 
@@ -401,7 +401,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
           klong <- clusteri$res
 
 
-          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit')
+          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link)
           G <- cluster_hie$G
           klong$cluster <- cluster_hie$res
 
@@ -426,7 +426,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
         klong <- clusteri$res
 
 
-        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average')
+        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link)
         G <- cluster_hie$G
         klong$cluster <- cluster_hie$res
 
