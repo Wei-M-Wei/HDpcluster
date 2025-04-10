@@ -566,6 +566,7 @@ double_selection_TWFE = function(Y, D, X, data){
   list(res = lasso_model, res_seperate = summary(Post_plm), estimate_correct = summary_table_correct, summary_table = summary_table)
 }
 
+#' @export
 cluster_kmeans <- function(y, X, T, type = 'long', groups = NULL, index, data) {
 
   data = data.frame(y = y, X, data[,index[1]], data[,index[2]])
@@ -617,6 +618,7 @@ cluster_kmeans <- function(y, X, T, type = 'long', groups = NULL, index, data) {
   list(res = k_result, clusters = clusters)
 }
 
+#' @export
 cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL, type = 'unit', index, data){
 
   data = data.frame(y = y, X, data[,index[1]], data[,index[2]])
@@ -671,6 +673,7 @@ cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL,
   return(list(res = res, G = G))
 }
 
+
 pseudo_dist <- function(x) {
   x = as.matrix(x)
 
@@ -688,54 +691,6 @@ pseudo_dist <- function(x) {
   return(as.dist(matrix(res$dist_matrix, nrow(x), nrow(x))))
 }
 
-double_selection_fixed = function(Y, D, X, data){
-  id = data$id
-  time = data$time
-
-  id_matrix <- model.matrix(~ factor(id) - 1)  # Remove intercept
-  time_matrix <- model.matrix(~ factor(time) - 1)  # Remove intercept
-
-  # Demeaning Y, D, and X variables
-  Y_tilde <- demean_matrix(data$Y, id_matrix, time_matrix)
-  D_tilde <- demean_matrix(data$D, id_matrix, time_matrix)
-  x_names <- grep("^X", names(data), value = TRUE)  # Extract all columns starting with 'X'
-
-  # Demean each control variable (X) using the same matrix transformation
-  X_tilde <- apply(data[, x_names], 2, function(x) demean_matrix(x, id_matrix, time_matrix))
-
-  # ---- Step 2: Apply LASSO Regression Using rlassoEffect ---- #
-
-  # Run rlassoEffect with demeaned variables
-  lasso_model <- rlassoEffect(x = X_tilde, y = Y_tilde, d = D_tilde, method = "partialling out")
-
-  trans = data.frame(y = Y_tilde, D = D_tilde, X = X_tilde)
-
-  lasso.Y <- rlasso(y ~ . -D - 1, data = trans )
-  Ytilde <- lasso.Y$residuals
-  lasso.D <- rlasso(D ~ .-1, data = trans[,-c(1)])
-  Dtilde <- lasso.D$residuals
-  data_res = data.frame(id = id, time = time, Ytilde, Dtilde)
-  Post_plm = plm(Ytilde ~ -1 + Dtilde, data = data_res, model = "pooling", index=c("id", "time"))
-
-  coefs <- coef(Post_plm)
-  se_corrected <- sqrt(vcovHC(Post_plm, type = "HC0", method = "arellano"))
-  t_values_corrected <- coefs / se_corrected
-
-  # Calculate p-values from t-distribution for each coefficient
-  df <- Post_plm$df.residual  # degrees of freedom
-  p_values_corrected <- 2 * pt(-abs(t_values_corrected), df)
-
-  summary_table_correct <- data.frame(
-    Estimate = coefs,
-    SE_Corrected = se_corrected,
-    t_value_Corrected = t_values_corrected,
-    p_value_Corrected = p_values_corrected
-  )
-  colnames(summary_table_correct) = c('Estimate', 'Std. Error corrected', 't-value corrected', 'Pr(>|t|) corrected')
-  summary_table = summary(Post_plm)
-  summary_table$coefficients = cbind(summary_table_correct, summary_table$coefficients)
-  list(res = lasso_model, res_seperate = summary(Post_plm), estimate_correct = summary_table_correct, summary_table = summary_table)
-}
 
 # Demean Y, D, and X using matrix transformation
 demean_matrix <- function(var, id_matrix, time_matrix) {
