@@ -4,13 +4,21 @@
 #' @export
 hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = 'seperate', link = 'average') {
 
+  data = data.frame(y = y, D = D, X, data[,index[1]], data[,index[2]])
+  colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
+  data = data[order(data[,index[2]], data[,index[1]]),]
+  y = data$y
+  D = data$D
+  X = data[, 3:(dim(data)[2]-2)]
+
+
   if(type_cluster == 'one way kmeans'){
 
     X = cbind(D, X)
     N <- dim(X)[1]/T
     K <- dim(X)[2]
 
-    clusteri <- cluster_kmeans(y, X, T = T, type = "long", groups = groups_unit)
+    clusteri <- cluster_kmeans(y, X, T = T, type = "long", groups = groups_unit, index = index, data = data)
     G <- clusteri$clusters
     klong <- clusteri$res
 
@@ -25,9 +33,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
     }
 
     Mv <-  as.matrix(bdiag( replicate(T, diag(N) - Dv %*% solve(t(Dv) %*% Dv) %*% t(Dv), simplify = FALSE) ))
-    trans = Mv %*% cbind(y, X)
-
-
+    trans = Mv %*% as.matrix(cbind(y, X))
     # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
 
     # Apply projection to Y and X_combined
@@ -71,12 +77,12 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
     K <- dim(X)[2]
 
     if (T == 1){
-      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit)
+      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit, index = index, data = data)
       G <- clusteri$clusters
       klong <- clusteri$res
 
 
-      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link)
+      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data)
       G <- cluster_hie$G
       klong$cluster <- cluster_hie$res
 
@@ -90,7 +96,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
       }
 
       Mv <-  as.matrix(bdiag( replicate(T, diag(N) - Dv %*% solve(t(Dv) %*% Dv) %*% t(Dv), simplify = FALSE) ))
-      trans = Mv %*% cbind(y, X)
+      trans = Mv %*% as.matrix(cbind(y, X))
 
 
       # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
@@ -137,12 +143,12 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
         trans = c()
         for (t in 1:T){
 
-          clusteri <- cluster_kmeans(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, type = "long", groups = groups_unit)
+          clusteri <- cluster_kmeans(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, type = "long", groups = groups_unit, index = index, data = data)
           G <- clusteri$clusters
           klong <- clusteri$res
 
 
-          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link)
+          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),])
           G <- cluster_hie$G
           klong$cluster <- cluster_hie$res
 
@@ -162,12 +168,12 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
         # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
       }else if (pesudo_type == 'average'){
 
-        clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit)
+        clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit, index = index, data = data)
         G <- clusteri$clusters
         klong <- clusteri$res
 
 
-        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link)
+        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data)
         G <- cluster_hie$G
         klong$cluster <- cluster_hie$res
 
@@ -181,7 +187,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
         }
 
         Mv <-  as.matrix(bdiag( replicate(T, diag(N) - Dv %*% solve(t(Dv) %*% Dv) %*% t(Dv), simplify = FALSE) ))
-        trans =  Mv %*% cbind(y, X)
+        trans =  Mv %*% as.matrix(cbind(y, X))
       }
 
       # Apply projection to Y and X_combined
@@ -232,13 +238,20 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
 #' @export
 hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = "seperate", link = 'average') {
 
+  data = data.frame(y = y, D = D, X, data[,index[1]], data[,index[2]])
+  colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
+  data = data[order(data[,index[2]], data[,index[1]]),]
+  y = data$y
+  D = data$D
+  data[, 3:(dim(data)[2]-2)]
+
   if(type_cluster == 'one way kmeans'){
 
     X = cbind(D, X)
     N <- dim(X)[1]/T
     K <- dim(X)[2]
 
-    clusteri <- cluster_kmeans(y, X, T = T, type = "long", groups = groups_unit)
+    clusteri <- cluster_kmeans(y, X, T = T, type = "long", groups = groups_unit, index = index, data = data)
     G <- clusteri$clusters
     klong <- clusteri$res
 
@@ -253,7 +266,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
     }
 
     Mv <-  as.matrix(bdiag( replicate(T, diag(N) - Dv %*% solve(t(Dv) %*% Dv) %*% t(Dv), simplify = FALSE) ))
-    trans = Mv %*% cbind(y, X)
+    trans = Mv %*% as.matrix(cbind(y, X))
 
 
     # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
@@ -316,12 +329,12 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
     K <- dim(X)[2]
 
     if (T == 1){
-      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit)
+      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit, index = index, data = data)
       G <- clusteri$clusters
       klong <- clusteri$res
 
 
-      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link)
+      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data)
       G <- cluster_hie$G
       klong$cluster <- cluster_hie$res
 
@@ -335,7 +348,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
       }
 
       Mv <-  as.matrix(bdiag( replicate(T, diag(N) - Dv %*% solve(t(Dv) %*% Dv) %*% t(Dv), simplify = FALSE) ))
-      trans = Mv %*% cbind(y, X)
+      trans = Mv %*% as.matrix(cbind(y, X))
 
 
       # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
@@ -396,12 +409,12 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
         trans = c()
         for (t in 1:T){
 
-          clusteri <- cluster_kmeans(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, type = "long", groups = groups_unit)
+          clusteri <- cluster_kmeans(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, type = "long", groups = groups_unit, index = index, data = data)
           G <- clusteri$clusters
           klong <- clusteri$res
 
 
-          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link)
+          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),])
           G <- cluster_hie$G
           klong$cluster <- cluster_hie$res
 
@@ -421,12 +434,12 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
         # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
       }else if (pesudo_type == 'average'){
 
-        clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit)
+        clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit, index = index, data = data)
         G <- clusteri$clusters
         klong <- clusteri$res
 
 
-        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link)
+        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data)
         G <- cluster_hie$G
         klong$cluster <- cluster_hie$res
 
@@ -440,7 +453,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
         }
 
         Mv <-  as.matrix(bdiag( replicate(T, diag(N) - Dv %*% solve(t(Dv) %*% Dv) %*% t(Dv), simplify = FALSE) ))
-        trans =  Mv %*% cbind(y, X)
+        trans =  Mv %*% as.matrix(cbind(y, X))
       }
       # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
 
@@ -553,7 +566,14 @@ double_selection_TWFE = function(Y, D, X, data){
   list(res = lasso_model, res_seperate = summary(Post_plm), estimate_correct = summary_table_correct, summary_table = summary_table)
 }
 
-cluster_kmeans <- function(y, X, T, type = 'long', groups = NULL) {
+cluster_kmeans <- function(y, X, T, type = 'long', groups = NULL, index, data) {
+
+  data = data.frame(y = y, X, data[,index[1]], data[,index[2]])
+  colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
+  data = data[order(data[,index[2]], data[,index[1]]),]
+
+  y = data$y
+  X = data[, 2:(dim(data)[2]-2)]
   # Compute row or column means for Y and each X in X_list
   if (type == "tall") {
     N = dim(X)[1]/T
@@ -597,7 +617,15 @@ cluster_kmeans <- function(y, X, T, type = 'long', groups = NULL) {
   list(res = k_result, clusters = clusters)
 }
 
-cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL, type = 'unit'){
+cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL, type = 'unit', index, data){
+
+  data = data.frame(y = y, X, data[,index[1]], data[,index[2]])
+  colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
+  data = data[order(data[,index[2]], data[,index[1]]),]
+
+  y = data$y
+  X = data[, 2:(dim(data)[2] - 2)]
+
   N = dim(X)[1]/T
   K = dim(X)[2]
   data_dist = data.frame(y,X)
