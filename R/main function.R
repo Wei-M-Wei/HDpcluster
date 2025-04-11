@@ -1,6 +1,5 @@
 #' @import hdm
 #' @import plm
-#' @import NbClust
 #' @useDynLib HDpcluster
 #' @export
 hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = 'seperate', link = 'average', optimal_index = NULL) {
@@ -78,7 +77,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
     K <- dim(X)[2]
 
     if (T == 1){
-      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit , index = index, data = data)
+      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit  , index = index, data = data)
       G <- clusteri$clusters
       klong <- clusteri$res
 
@@ -144,7 +143,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
         trans = c()
         for (t in 1:T){
 
-          clusteri <- cluster_kmeans(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, type = "long", groups = groups_unit, index = index, data = data)
+          clusteri <- cluster_kmeans(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, type = "long", groups = groups_unit, index = index, data = data[(N*(t-1)+1):(N*t),])
           G <- clusteri$clusters
           klong <- clusteri$res
 
@@ -163,7 +162,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
           }
 
           Mv <-  as.matrix(bdiag( replicate(1, diag(N) - Dv %*% solve(t(Dv) %*% Dv) %*% t(Dv), simplify = FALSE) ))
-          trans = rbind(trans, Mv %*% cbind(y[(N*(t-1)+1):(N*t)], X[(N*(t-1)+1):(N*t),]))
+          trans = rbind(trans, Mv %*% as.matrix(cbind(y[(N*(t-1)+1):(N*t)], X[(N*(t-1)+1):(N*t),])))
 
         }
         # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
@@ -429,7 +428,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
           }
 
           Mv <-  as.matrix(bdiag( replicate(1, diag(N) - Dv %*% solve(t(Dv) %*% Dv) %*% t(Dv), simplify = FALSE) ))
-          trans = rbind(trans, Mv %*% cbind(y[(N*(t-1)+1):(N*t)], X[(N*(t-1)+1):(N*t),]))
+          trans = rbind(trans, Mv %*% as.matrix(cbind(y[(N*(t-1)+1):(N*t)], X[(N*(t-1)+1):(N*t),])))
 
         }
         # cbind(y, X)[1:N,] - t(sweep( t(t(Dv) %*% cbind(y, X)[1:N,]) , 2, colSums(Dv), "/")[, c(klong$cluster)])
@@ -674,20 +673,20 @@ cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL,
 
     if (type == 'unit'){
       dist_matrix = pseudo_dist(data_dist)
-      clusters = NbClust(data = data_dist, diss = dist_matrix, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = 100)
+      clusters = NbClust(data = data_dist, diss = dist_matrix, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = N/2)
       G = length(unique(clusters$Best.partition))
       res = clusters$Best.partition
 
     }else if (type == 'covariate'){
       dist_trans = pseudo_dist(t(data_dist))
-      clusters = NbClust(data = data_dist, diss = dist_trans, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = 100)
+      clusters = NbClust(data = data_dist, diss = dist_trans, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = N/2)
       G = length(unique(clusters$Best.partition))
       res = clusters$Best.partition
     }else if(type == 'average'){
       mat_array <- array(t(data_dist), dim = c(K, N, T))  # transpose first
       avg <- apply(mat_array, c(2, 1), mean)  # result: N x K
       dist_matrix = pseudo_dist(avg)
-      clusters = NbClust(data = data_dist, diss = dist_matrix, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = 100)
+      clusters = NbClust(data = as.matrix(avg), diss = dist_matrix, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = N/2)
       G = length(unique(clusters$Best.partition))
       res = clusters$Best.partition
     }
