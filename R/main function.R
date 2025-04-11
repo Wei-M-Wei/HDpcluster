@@ -1,8 +1,9 @@
 #' @import hdm
 #' @import plm
+#' @import NbClust
 #' @useDynLib HDpcluster
 #' @export
-hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = 'seperate', link = 'average') {
+hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = 'seperate', link = 'average', optimal_index = NULL) {
 
   data = data.frame(y = y, D = D, X, data[,index[1]], data[,index[2]])
   colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
@@ -77,12 +78,12 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
     K <- dim(X)[2]
 
     if (T == 1){
-      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit, index = index, data = data)
+      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit , index = index, data = data)
       G <- clusteri$clusters
       klong <- clusteri$res
 
 
-      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data)
+      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data, optimal_index = optimal_index)
       G <- cluster_hie$G
       klong$cluster <- cluster_hie$res
 
@@ -148,7 +149,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
           klong <- clusteri$res
 
 
-          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),])
+          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),], optimal_index = optimal_index)
           G <- cluster_hie$G
           klong$cluster <- cluster_hie$res
 
@@ -173,7 +174,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
         klong <- clusteri$res
 
 
-        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data)
+        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data, optimal_index = optimal_index)
         G <- cluster_hie$G
         klong$cluster <- cluster_hie$res
 
@@ -236,7 +237,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
 #' @import mlr3learners
 #' @import mlr3
 #' @export
-hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = "seperate", link = 'average') {
+hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = "seperate", link = 'average', optimal_index = NULL) {
 
   data = data.frame(y = y, D = D, X, data[,index[1]], data[,index[2]])
   colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
@@ -329,12 +330,12 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
     K <- dim(X)[2]
 
     if (T == 1){
-      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit, index = index, data = data)
+      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit , index = index, data = data)
       G <- clusteri$clusters
       klong <- clusteri$res
 
 
-      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data)
+      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data, optimal_index = optimal_index)
       G <- cluster_hie$G
       klong$cluster <- cluster_hie$res
 
@@ -414,7 +415,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
           klong <- clusteri$res
 
 
-          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),])
+          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),], optimal_index = optimal_index)
           G <- cluster_hie$G
           klong$cluster <- cluster_hie$res
 
@@ -439,7 +440,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
         klong <- clusteri$res
 
 
-        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data)
+        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data, optimal_index = optimal_index)
         G <- cluster_hie$G
         klong$cluster <- cluster_hie$res
 
@@ -566,7 +567,6 @@ double_selection_TWFE = function(Y, D, X, data){
   list(res = lasso_model, res_seperate = summary(Post_plm), estimate_correct = summary_table_correct, summary_table = summary_table)
 }
 
-#' @export
 cluster_kmeans <- function(y, X, T, type = 'long', groups = NULL, index, data) {
 
   data = data.frame(y = y, X, data[,index[1]], data[,index[2]])
@@ -618,8 +618,7 @@ cluster_kmeans <- function(y, X, T, type = 'long', groups = NULL, index, data) {
   list(res = k_result, clusters = clusters)
 }
 
-#' @export
-cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL, type = 'unit', index, data){
+cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL, type = 'unit', index, data, optimal_index = NULL){
 
   data = data.frame(y = y, X, data[,index[1]], data[,index[2]])
   colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
@@ -631,48 +630,70 @@ cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL,
   N = dim(X)[1]/T
   K = dim(X)[2]
   data_dist = data.frame(y,X)
-  if (type == 'unit'){
-    dist_matrix = pseudo_dist(data_dist)
-    hc <- hclust(dist_matrix, method = link)
-    if (is.na(cluster) == 1){
-      clusters <- cutree(hc, h = threshold)
-      G = length(unique(clusters))
-      res = clusters
-    }else{
-      clusters <- cutree(hc, k = cluster)
-      G = length(unique(clusters))
-      res = clusters
+  if (is.null(optimal_index) == 1){
+    if (type == 'unit'){
+      dist_matrix = pseudo_dist(data_dist)
+      hc <- hclust(dist_matrix, method = link)
+      if (is.na(cluster) == 1){
+        clusters <- cutree(hc, h = threshold)
+        G = length(unique(clusters))
+        res = clusters
+      }else{
+        clusters <- cutree(hc, k = cluster)
+        G = length(unique(clusters))
+        res = clusters
+      }
+    }else if (type == 'covariate'){
+      dist_trans = pseudo_dist(t(data_dist))
+      hc <- hclust(dist_trans, method = link)
+      if (is.na(cluster) == 1){
+        clusters <- cutree(hc, h = threshold)
+        G = length(unique(clusters))
+        res = clusters
+      }else{
+        clusters <- cutree(hc, k = cluster)
+        G = length(unique(clusters))
+        res = clusters
+      }
+    }else if(type == 'average'){
+      mat_array <- array(t(data_dist), dim = c(K, N, T))  # transpose first
+      avg <- apply(mat_array, c(2, 1), mean)  # result: N x K
+      dist_matrix = pseudo_dist(avg)
+      hc <- hclust(dist_matrix, method = link)
+      if (is.na(cluster) == 1){
+        clusters <- cutree(hc, h = threshold)
+        G = length(unique(clusters))
+        res = clusters
+      }else{
+        clusters <- cutree(hc, k = cluster)
+        G = length(unique(clusters))
+        res = clusters
+      }
     }
-  }else if (type == 'covariate'){
-    dist_trans = pseudo_dist(t(data_dist))
-    hc <- hclust(dist_trans, method = link)
-    if (is.na(cluster) == 1){
-      clusters <- cutree(hc, h = threshold)
-      G = length(unique(clusters))
-      res = clusters
-    }else{
-      clusters <- cutree(hc, k = cluster)
-      G = length(unique(clusters))
-      res = clusters
-    }
-  }else if(type == 'average'){
-    mat_array <- array(t(data_dist), dim = c(K, N, T))  # transpose first
-    avg <- apply(mat_array, c(2, 1), mean)  # result: N x K
-    dist_matrix = pseudo_dist(avg)
-    hc <- hclust(dist_matrix, method = link)
-    if (is.na(cluster) == 1){
-      clusters <- cutree(hc, h = threshold)
-      G = length(unique(clusters))
-      res = clusters
-    }else{
-      clusters <- cutree(hc, k = cluster)
-      G = length(unique(clusters))
-      res = clusters
+  }else{
+
+    if (type == 'unit'){
+      dist_matrix = pseudo_dist(data_dist)
+      clusters = NbClust(data = data_dist, diss = dist_matrix, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = 100)
+      G = length(unique(clusters$Best.partition))
+      res = clusters$Best.partition
+
+    }else if (type == 'covariate'){
+      dist_trans = pseudo_dist(t(data_dist))
+      clusters = NbClust(data = data_dist, diss = dist_trans, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = 100)
+      G = length(unique(clusters$Best.partition))
+      res = clusters$Best.partition
+    }else if(type == 'average'){
+      mat_array <- array(t(data_dist), dim = c(K, N, T))  # transpose first
+      avg <- apply(mat_array, c(2, 1), mean)  # result: N x K
+      dist_matrix = pseudo_dist(avg)
+      clusters = NbClust(data = data_dist, diss = dist_matrix, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = 100)
+      G = length(unique(clusters$Best.partition))
+      res = clusters$Best.partition
     }
   }
   return(list(res = res, G = G))
 }
-
 
 pseudo_dist <- function(x) {
   x = as.matrix(x)
@@ -691,6 +712,54 @@ pseudo_dist <- function(x) {
   return(as.dist(matrix(res$dist_matrix, nrow(x), nrow(x))))
 }
 
+double_selection_fixed = function(Y, D, X, data){
+  id = data$id
+  time = data$time
+
+  id_matrix <- model.matrix(~ factor(id) - 1)  # Remove intercept
+  time_matrix <- model.matrix(~ factor(time) - 1)  # Remove intercept
+
+  # Demeaning Y, D, and X variables
+  Y_tilde <- demean_matrix(data$Y, id_matrix, time_matrix)
+  D_tilde <- demean_matrix(data$D, id_matrix, time_matrix)
+  x_names <- grep("^X", names(data), value = TRUE)  # Extract all columns starting with 'X'
+
+  # Demean each control variable (X) using the same matrix transformation
+  X_tilde <- apply(data[, x_names], 2, function(x) demean_matrix(x, id_matrix, time_matrix))
+
+  # ---- Step 2: Apply LASSO Regression Using rlassoEffect ---- #
+
+  # Run rlassoEffect with demeaned variables
+  lasso_model <- rlassoEffect(x = X_tilde, y = Y_tilde, d = D_tilde, method = "partialling out")
+
+  trans = data.frame(y = Y_tilde, D = D_tilde, X = X_tilde)
+
+  lasso.Y <- rlasso(y ~ . -D - 1, data = trans )
+  Ytilde <- lasso.Y$residuals
+  lasso.D <- rlasso(D ~ .-1, data = trans[,-c(1)])
+  Dtilde <- lasso.D$residuals
+  data_res = data.frame(id = id, time = time, Ytilde, Dtilde)
+  Post_plm = plm(Ytilde ~ -1 + Dtilde, data = data_res, model = "pooling", index=c("id", "time"))
+
+  coefs <- coef(Post_plm)
+  se_corrected <- sqrt(vcovHC(Post_plm, type = "HC0", method = "arellano"))
+  t_values_corrected <- coefs / se_corrected
+
+  # Calculate p-values from t-distribution for each coefficient
+  df <- Post_plm$df.residual  # degrees of freedom
+  p_values_corrected <- 2 * pt(-abs(t_values_corrected), df)
+
+  summary_table_correct <- data.frame(
+    Estimate = coefs,
+    SE_Corrected = se_corrected,
+    t_value_Corrected = t_values_corrected,
+    p_value_Corrected = p_values_corrected
+  )
+  colnames(summary_table_correct) = c('Estimate', 'Std. Error corrected', 't-value corrected', 'Pr(>|t|) corrected')
+  summary_table = summary(Post_plm)
+  summary_table$coefficients = cbind(summary_table_correct, summary_table$coefficients)
+  list(res = lasso_model, res_seperate = summary(Post_plm), estimate_correct = summary_table_correct, summary_table = summary_table)
+}
 
 # Demean Y, D, and X using matrix transformation
 demean_matrix <- function(var, id_matrix, time_matrix) {
@@ -698,4 +767,17 @@ demean_matrix <- function(var, id_matrix, time_matrix) {
   group_mean_id <- id_matrix %*% solve(t(id_matrix) %*% id_matrix) %*% t(id_matrix) %*% var
   group_mean_time <- time_matrix %*% solve(t(time_matrix) %*% time_matrix) %*% t(time_matrix) %*% var
   var - group_mean_id - group_mean_time
+}
+
+dist_to_symmetric_matrix <- function(dist_obj) {
+  # Convert the dist object to a full matrix
+  full_matrix <- as.matrix(dist_obj)
+
+  # Make the matrix symmetric by mirroring the upper triangle to the lower triangle
+  full_matrix[lower.tri(full_matrix)] <- t(full_matrix)[lower.tri(full_matrix)]
+
+  # Set the diagonal to zero (distance from a point to itself is 0)
+  diag(full_matrix) <- 0
+
+  return(full_matrix)
 }
