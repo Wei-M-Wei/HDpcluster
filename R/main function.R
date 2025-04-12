@@ -3,7 +3,7 @@
 #' @import NbClust
 #' @useDynLib HDpcluster
 #' @export
-hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = 'seperate', link = 'average', optimal_index = NULL) {
+hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = 'seperate', link = 'average', cluster_select = NULL) {
 
   data = data.frame(y = y, D = D, X, data[,index[1]], data[,index[2]])
   colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
@@ -78,12 +78,12 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
     K <- dim(X)[2]
 
     if (T == 1){
-      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit  , index = index, data = data)
+      clusteri <- cluster_kmeans(y = y, X = X, T = T, type = "long", groups = groups_unit, index = index, data = data)
       G <- clusteri$clusters
       klong <- clusteri$res
 
 
-      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data, optimal_index = optimal_index)
+      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data, cluster_select = cluster_select)
       G <- cluster_hie$G
       klong$cluster <- cluster_hie$res
 
@@ -149,7 +149,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
           klong <- clusteri$res
 
 
-          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),], optimal_index = optimal_index)
+          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),], cluster_select = cluster_select)
           G <- cluster_hie$G
           klong$cluster <- cluster_hie$res
 
@@ -174,7 +174,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
         klong <- clusteri$res
 
 
-        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data, optimal_index = optimal_index)
+        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data, cluster_select = cluster_select)
         G <- cluster_hie$G
         klong$cluster <- cluster_hie$res
 
@@ -237,7 +237,7 @@ hdpcluster_ds <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NUL
 #' @import mlr3learners
 #' @import mlr3
 #' @export
-hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = "seperate", link = 'average', optimal_index = NULL) {
+hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NULL, index, data, type_cluster = 'one way kmeans', pesudo_type = "seperate", link = 'average', cluster_select = NULL) {
 
   data = data.frame(y = y, D = D, X, data[,index[1]], data[,index[2]])
   colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
@@ -335,7 +335,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
       klong <- clusteri$res
 
 
-      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data, optimal_index = optimal_index)
+      cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'unit', link = link, index = index, data = data, cluster_select = cluster_select)
       G <- cluster_hie$G
       klong$cluster <- cluster_hie$res
 
@@ -415,7 +415,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
           klong <- clusteri$res
 
 
-          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),], optimal_index = optimal_index)
+          cluster_hie = cluster_pesudo(y = y[(N*(t-1)+1):(N*t)], X = X[(N*(t-1)+1):(N*t),], T = 1, cluster = G, type = 'unit', link = link, index = index, data = data[(N*(t-1)+1):(N*t),], cluster_select = cluster_select)
           G <- cluster_hie$G
           klong$cluster <- cluster_hie$res
 
@@ -440,7 +440,7 @@ hdpcluster_dml <- function(y, X, T, D, groups_covariate = NULL, groups_unit = NU
         klong <- clusteri$res
 
 
-        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data, optimal_index = optimal_index)
+        cluster_hie = cluster_pesudo(y = y, X = X, T = T, cluster = G, type = 'average', link = link, index = index, data = data, cluster_select = cluster_select)
         G <- cluster_hie$G
         klong$cluster <- cluster_hie$res
 
@@ -524,6 +524,14 @@ double_selection_TWFE = function(Y, D, X, data){
 
   id_matrix <- model.matrix(~ factor(id) - 1)  # Remove intercept
   time_matrix <- model.matrix(~ factor(time) - 1)  # Remove intercept
+
+  # Demean Y, D, and X using matrix transformation
+  demean_matrix <- function(var, id_matrix, time_matrix) {
+    # Subtract the group means for each group (id and time) from the variable
+    group_mean_id <- id_matrix %*% solve(t(id_matrix) %*% id_matrix) %*% t(id_matrix) %*% var
+    group_mean_time <- time_matrix %*% solve(t(time_matrix) %*% time_matrix) %*% t(time_matrix) %*% var
+    var - group_mean_id - group_mean_time
+  }
 
   # Demeaning Y, D, and X variables
   Y_tilde <- demean_matrix(data$Y, id_matrix, time_matrix)
@@ -618,7 +626,7 @@ cluster_kmeans <- function(y, X, T, type = 'long', groups = NULL, index, data) {
   list(res = k_result, clusters = clusters)
 }
 
-cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL, type = 'unit', index, data, optimal_index = NULL){
+cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL, type = 'unit', index, data, cluster_select = NULL){
 
   data = data.frame(y = y, X, data[,index[1]], data[,index[2]])
   colnames(data)[(dim(data)[2]-1):dim(data)[2]] = index
@@ -630,7 +638,7 @@ cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL,
   N = dim(X)[1]/T
   K = dim(X)[2]
   data_dist = data.frame(y,X)
-  if (is.null(optimal_index) == 1){
+  if (is.null(cluster_select) == 1){
     if (type == 'unit'){
       dist_matrix = pseudo_dist(data_dist)
       hc <- hclust(dist_matrix, method = link)
@@ -674,20 +682,20 @@ cluster_pesudo <- function(y, X, T, link = "average", threshold, cluster = NULL,
 
     if (type == 'unit'){
       dist_matrix = pseudo_dist(data_dist)
-      clusters = NbClust(data = data_dist, diss = dist_matrix, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = N/2)
+      clusters = NbClust(data = data_dist, diss = dist_matrix, distance = NULL, method = link, index = cluster_select, min.nc = 1, max.nc = N/2)
       G = length(unique(clusters$Best.partition))
       res = clusters$Best.partition
 
     }else if (type == 'covariate'){
       dist_trans = pseudo_dist(t(data_dist))
-      clusters = NbClust(data = data_dist, diss = dist_trans, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = N/2)
+      clusters = NbClust(data = data_dist, diss = dist_trans, distance = NULL, method = link, index = cluster_select, min.nc = 1, max.nc = N/2)
       G = length(unique(clusters$Best.partition))
       res = clusters$Best.partition
     }else if(type == 'average'){
       mat_array <- array(t(data_dist), dim = c(K, N, T))  # transpose first
       avg <- apply(mat_array, c(2, 1), mean)  # result: N x K
       dist_matrix = pseudo_dist(avg)
-      clusters = NbClust(data = as.matrix(avg), diss = dist_matrix, distance = NULL, method = link, index = optimal_index, min.nc = 1, max.nc = N/2)
+      clusters = NbClust(data = as.matrix(avg), diss = dist_matrix, distance = NULL, method = link, index = cluster_select, min.nc = 1, max.nc = N/2)
       G = length(unique(clusters$Best.partition))
       res = clusters$Best.partition
     }
