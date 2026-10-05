@@ -1,2 +1,4 @@
 ^HDpcluster\.Rproj$
 ^\.Rproj\.user$
+^\.positai$
+^\.claude$
